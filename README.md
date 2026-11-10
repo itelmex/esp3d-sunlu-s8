@@ -15,9 +15,16 @@ Sirve para cualquier impresora con Marlin por USB; la Sunlu S8 es la que está p
 - Enciende y apaga la impresora y la luz con un módulo de 2 relés.
 - Apaga la impresora sola al terminar, cuando el hotend ya se enfrió.
 
-Estado al 10/11/2026: **funcionando** en http://192.168.1.15 (IP reservada en el router por MAC). Probado con la impresora
-el 10/11/2026: lectura de temperatura, relés y apagado por temperatura desde `cam.html`. Falta una impresión completa
-con el apagado al final (ver [Pendiente](#pendiente)).
+Estado al 10/11/2026: **funcionando en dos Sunlu S8**:
+
+| Impresora | Placa (MAC) | Dirección | Velocidad de Marlin |
+|---|---|---|---|
+| Sunlu-S8-B | 28:84:85:54:35:ec | http://192.168.1.15 | 250000 |
+| Sunlu-S8-A | 28:84:85:54:3c:34 | http://192.168.1.21 | **117647** (ver [Velocidad de la impresora](#velocidad-de-la-impresora)) |
+
+En la S8-B se probó con la impresora la lectura de temperatura, los relés y el apagado por temperatura desde `cam.html`.
+La S8-A se grabó con el binario completo de `binarios/`, igual que lo haría cualquiera. Falta una impresión completa con
+el apagado al final (ver [Pendiente](#pendiente)).
 
 ## Contenido
 
@@ -134,7 +141,8 @@ Ninguna de las dos toca la interfaz web ni el nombre guardado de `cam.html`.
 2. Configurar la red de la casa (modo estación) y cambiar la contraseña de administración.
 3. En la consola de ESP3D, una sola vez:
    - `[ESP950]USB`: la salida a la impresora por USB (ESP3D 3.1.3 la trae sin definir).
-   - `[ESP902]250000`: la velocidad de Marlin. La Sunlu S8 usa 250000; otras impresoras, 115200.
+   - `[ESP902]250000`: la velocidad de Marlin. Una S8 usa 250000 y otra 115200, que en realidad es 117647: ver
+     [Velocidad de la impresora](#velocidad-de-la-impresora).
 4. Reiniciar y entrar a la nueva IP. Conviene reservarla en el router por la MAC de la placa.
 5. En la WEBUI: **Ajustes → Interfaz → SD** activado, y en **Polling** activar **Enable polling** (la lista ya trae
    `M105` cada 3000 ms; dejar uno solo). Sin esto la WEBUI se queda en "Waiting for temperatures list available from
@@ -174,15 +182,35 @@ cd build/ESP3D-3.1.3-camara
 | `ESP700.cpp` | Acepta `stream=/sd/archivo` y lo convierte a `/SD/archivo` | Es lo que manda el ▶ de la WEBUI 3.1.0 |
 | `gcode_host.cpp` | Cualquier línea de Marlin mientras espera el `ok` reinicia el plazo de 16 s | Sin esto, una orden larga (M190, M109, G28, G29, G4) aborta la impresión desde la SD de la placa |
 
-El parche de la placa sin cámara sólo trae `platformio.ini` (entorno `esp32-s3-luis`) y `configuration.h`.
+| `usb_serial_service.cpp` | Acepta además las velocidades 111111 y 117647 | Ver [Velocidad de la impresora](#velocidad-de-la-impresora) |
+
+El parche de la placa sin cámara trae `platformio.ini` (entorno `esp32-s3-luis`), `configuration.h` y
+`usb_serial_service.cpp`.
 
 ### Ajustes que se hacen una vez (quedan guardados en la placa)
 
 - `[ESP950]USB`: ESP3D 3.1.3 trae la salida sin definir ("output: ???").
-- `[ESP902]250000`: el Marlin de la S8 trabaja a 250000; a 115200 no contesta.
+- `[ESP902]250000` o `[ESP902]117647`, según la impresora (ver abajo). Se aplica al reiniciar la placa (`[ESP444]RESTART`).
 - Red de la casa en modo estación. Sin red, ESP3D abre su propia red `ESP3D` (contraseña `12345678`) en http://192.168.0.1.
 - En la WEBUI: **Ajustes → Interfaz → SD** activado, para que aparezca la SD de la placa, y **Polling → Enable polling**
   con un solo `M105` cada 3000 ms, para que muestre las temperaturas. Se guarda en cada placa (`preferences.json`).
+
+### Velocidad de la impresora
+
+No todas las Sunlu S8 traen el mismo Marlin. Para saber cuál tiene, probar en este orden y quedarse con la primera que
+conteste **limpio**:
+
+1. **250000**: la S8-B. Con un ATmega a 16 MHz esta velocidad es exacta.
+2. **117647**: la S8-A, cuyo Marlin está a "115200". Un ATmega a 16 MHz no puede dar 115200 exactos: da 117647 (2.1 %
+   más rápido). A 115200 contesta, pero con bytes dañados: respuestas con basura y comandos partidos (`G1 F1200` llegaba
+   como `G1` y `F1200`, "Unknown command"). Al imprimir eso es peligroso, porque ESP3D manda el G-code sin suma de
+   verificación. El CH340 de la impresora da 117647 exactos (6 MHz / 51), y el parche agrega esa velocidad a ESP3D.
+   - Medido el 10/11/2026: a 115200 casi todas las respuestas largas venían dañadas; a 117647, 63 comandos de prueba
+     con 63 `ok`, ningún error, y `M115` completo tres veces.
+   - 111111 también quedó agregada (el mismo ATmega sin doble velocidad), pero con esta impresora sólo da basura.
+
+Para probar: `[ESP902]<velocidad>`, `[ESP444]RESTART`, y en la consola mandar `M115` un par de veces. Si la línea
+`FIRMWARE_NAME:Marlin ...` llega completa y sin caracteres raros, esa es la velocidad.
 
 ## Uso
 
@@ -262,6 +290,8 @@ otra pestaña: recargarla.
   hotend a 60 °C ofreció esperar, y al bajar de 50 °C activó el relé y la impresora se apagó.
 - Confirmar que el Marlin de la S8 manda mensajes mientras espera (`M109`, `G4`), que es lo que mantiene viva la
   impresión con el arreglo de `gcode_host.cpp`.
+- S8-A: falta soldar el zócalo microSD y conectar los relés. Su cámara y su conexión con la impresora ya funcionan.
+- S8-B: sigue con el firmware anterior, sin las velocidades nuevas; no las necesita porque usa 250000.
 - No se puede subir a la SD de la impresora desde la WEBUI: sólo lo permite el protocolo MKS.
 - No hay complemento de Cura para ESP3D. Opciones: WebDAV o un script de envío.
 

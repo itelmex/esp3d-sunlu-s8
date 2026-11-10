@@ -19,6 +19,21 @@ diff -ruN '--exclude=.pio' '--exclude=.pioenvs' '--exclude=.git' '--exclude=data
  
  /************************************
   *
+diff -ruN '--exclude=.pio' '--exclude=.pioenvs' '--exclude=.git' '--exclude=data' '--exclude=extra-libraries' '--exclude=libraries' '--exclude=images' '--exclude=docs' '--exclude=embedded' '--exclude=tools' '--exclude=logo' a/esp3d/src/modules/usb-serial/usb_serial_service.cpp b/esp3d/src/modules/usb-serial/usb_serial_service.cpp
+--- a/esp3d/src/modules/usb-serial/usb_serial_service.cpp	2026-11-10 09:41:23.316166968 -0700
++++ b/esp3d/src/modules/usb-serial/usb_serial_service.cpp	2026-11-10 15:29:08.810822152 -0700
+@@ -30,8 +30,10 @@
+ #include "../notifications/notifications_service.h"
+ #endif  // NOTIFICATION_FEATURE
+ 
++// Luis (10/11/2026): 111111 y 117647 son las velocidades reales de un ATmega a 16 MHz configurado a 115200
++// (sin y con U2X). El CH340 de la impresora las da exactas (6 MHz / 54 y / 51) y evita la corrupcion de 115200.
+ const uint32_t SupportedUsbSerialBaudList[] = {
+-    9600,   19200,  38400,  57600,   74880,   115200, 230400,
++    9600,   19200,  38400,  57600,   74880,   111111, 115200, 117647, 230400,
+     250000, 500000, 921600, 1000000, 1958400, 2000000};
+ const size_t SupportedUsbSerialBaudListSize =
+     sizeof(SupportedUsbSerialBaudList) / sizeof(uint32_t);
 diff -ruN '--exclude=.pio' '--exclude=.pioenvs' '--exclude=.git' '--exclude=data' '--exclude=extra-libraries' '--exclude=libraries' '--exclude=images' '--exclude=docs' '--exclude=embedded' '--exclude=tools' '--exclude=logo' a/platformio.ini b/platformio.ini
 --- a/platformio.ini	2026-11-10 09:41:23.745112483 -0700
 +++ b/platformio.ini	2026-11-09 19:03:12.854730973 -0700

@@ -1,2 +1,2 @@
-f4ed84d5aa28100af85fa7d8603469e66e99df073df0120ec9cb1313942be1dc  esp3d-3.1.3-sunlu-camara-completo.zip
-1d80000fc3705aeb74d26cc53b925fa9f482adf708cdd61b5e4b1c4990b1fad0  esp3d-3.1.3-sunlu-camara-firmware.bin
+8311974db3382c2ba8832ebfe1e6b905e13e8a5a7c760dd9daee0867702e142c  esp3d-3.1.3-sunlu-camara-completo.zip
+12f972bf3dba9d8a94a3260e15692af732f8f5552f5a2cc0ee7461f5e43a2390  esp3d-3.1.3-sunlu-camara-firmware.bin

@@ -124,6 +124,35 @@ diff -ruN '--exclude=.pio' '--exclude=.pioenvs' '--exclude=.git' '--exclude=data
      if (!ESP3DHal::is_pin_usable(pin)) {
        hasError = true;
        error_msg = "Invalid pin";
+diff -ruN '--exclude=.pio' '--exclude=.pioenvs' '--exclude=.git' '--exclude=data' '--exclude=extra-libraries' '--exclude=libraries' '--exclude=images' '--exclude=docs' '--exclude=embedded' '--exclude=tools' '--exclude=logo' a/esp3d/src/core/commands/ESP400.cpp b/esp3d/src/core/commands/ESP400.cpp
+--- a/esp3d/src/core/commands/ESP400.cpp	2026-11-10 09:41:23.305734962 -0700
++++ b/esp3d/src/core/commands/ESP400.cpp	2026-11-10 15:37:10.093448720 -0700
+@@ -141,6 +141,12 @@
+ const char* SupportedBaudListSizeStr[] = {
+     "9600",   "19200",  "38400",  "57600",   "74880",   "115200", "230400",
+     "250000", "500000", "921600", "1000000", "1958400", "2000000"};
++#if defined(USB_SERIAL_FEATURE)
++// Luis (10/11/2026): la lista de la WEBUI para el USB incluye 111111 y 117647 (ver usb_serial_service.cpp).
++const char* SupportedUsbBaudListStr[] = {
++    "9600",   "19200",  "38400",  "57600",  "74880",   "111111",  "115200", "117647",
++    "230400", "250000", "500000", "921600", "1000000", "1958400", "2000000"};
++#endif  // USB_SERIAL_FEATURE
+ 
+ 
+ #ifdef SENSOR_DEVICE
+@@ -526,9 +532,9 @@
+                   nullptr, true, target, requestId);
+   // Usb-Serial Baud Rate
+   dispatchSetting(json, "system/system", ESP_USB_SERIAL_BAUD_RATE,
+-                  "usb-serial baud", SupportedBaudListSizeStr,
+-                  SupportedBaudListSizeStr,
+-                  sizeof(SupportedBaudListSizeStr) / sizeof(char*), -1, -1, -1,
++                  "usb-serial baud", SupportedUsbBaudListStr,
++                  SupportedUsbBaudListStr,
++                  sizeof(SupportedUsbBaudListStr) / sizeof(char*), -1, -1, -1,
+                   nullptr, true, target, requestId);
+ 
+ #endif  // defined(USB_SERIAL_FEATURE)
 diff -ruN '--exclude=.pio' '--exclude=.pioenvs' '--exclude=.git' '--exclude=data' '--exclude=extra-libraries' '--exclude=libraries' '--exclude=images' '--exclude=docs' '--exclude=embedded' '--exclude=tools' '--exclude=logo' a/esp3d/src/core/commands/ESP700.cpp b/esp3d/src/core/commands/ESP700.cpp
 --- a/esp3d/src/core/commands/ESP700.cpp	2026-11-10 09:41:23.306673595 -0700
 +++ b/esp3d/src/core/commands/ESP700.cpp	2026-11-09 20:51:59.149881468 -0700

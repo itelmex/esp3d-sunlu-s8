@@ -183,9 +183,10 @@ cd build/ESP3D-3.1.3-camara
 | `gcode_host.cpp` | Cualquier línea de Marlin mientras espera el `ok` reinicia el plazo de 16 s | Sin esto, una orden larga (M190, M109, G28, G29, G4) aborta la impresión desde la SD de la placa |
 
 | `usb_serial_service.cpp` | Acepta además las velocidades 111111 y 117647 | Ver [Velocidad de la impresora](#velocidad-de-la-impresora) |
+| `ESP400.cpp` | La lista "usb-serial baud" de la WEBUI también trae 111111 y 117647 | Poder elegirlas en Ajustes sin regresar a 115200 |
 
-El parche de la placa sin cámara trae `platformio.ini` (entorno `esp32-s3-luis`), `configuration.h` y
-`usb_serial_service.cpp`.
+El parche de la placa sin cámara trae `platformio.ini` (entorno `esp32-s3-luis`), `configuration.h`,
+`usb_serial_service.cpp` y `ESP400.cpp`.
 
 ### Ajustes que se hacen una vez (quedan guardados en la placa)
 
@@ -209,7 +210,7 @@ conteste **limpio**:
      con 63 `ok`, ningún error, y `M115` completo tres veces.
    - 111111 también quedó agregada (el mismo ATmega sin doble velocidad), pero con esta impresora sólo da basura.
 
-Para probar: `[ESP902]<velocidad>`, `[ESP444]RESTART`, y en la consola mandar `M115` un par de veces. Si la línea
+En la WEBUI es **Ajustes → ESP3D → usb-serial baud** (o con el comando `[ESP902]<velocidad>`). Para probar: elegirla, `[ESP444]RESTART`, y en la consola mandar `M115` un par de veces. Si la línea
 `FIRMWARE_NAME:Marlin ...` llega completa y sin caracteres raros, esa es la velocidad.
 
 ## Uso

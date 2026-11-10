@@ -87,6 +87,7 @@ cd build/ESP3D-3.1.3-camara
   la pantalla del tótem.
 - Grabar por USB conserva los ajustes de la placa: WiFi, salida USB y velocidad.
 - **`uploadfs` borra** lo que se haya subido a mano al sistema de archivos de la placa. Por eso `cam.html` va en `esp3d/data/`.
+  También borra el nombre guardado (`camara.json`): hay que volver a ponerlo con el lápiz.
 - Al reiniciarse la placa **se reinicia también la impresora** (se reabre su USB). No grabar durante una impresión.
 
 ### Qué cambia el parche de la placa con cámara
@@ -114,7 +115,10 @@ El parche de la placa sin cámara sólo trae `platformio.ini` (entorno `esp32-s3
 
 ### Páginas
 
-- **http://192.168.1.15/cam.html**: la página del día a día (pestaña "Sunlu-S8-B Cam"). Se adapta a la PC y al celular.
+- **http://192.168.1.15/cam.html**: la página del día a día. Se adapta a la PC y al celular.
+  - **Nombre editable** con el lápiz junto al título: nombre (también el de la pestaña) y modelo de impresora. Se guarda
+    en la placa (`/camara.json`), así que se ve igual en todos los equipos. Sin nombre guardado usa el nombre de red de
+    la placa + " Cam". Así la misma página sirve para cualquier impresora.
   - Imagen en vivo, con pausar, girar 90°, ritmo de las fotos, guardar foto y pantalla completa.
   - Avance de la impresión desde la SD de la placa: porcentaje, archivo, transcurrido, restante aproximado.
   - **Control:** interruptores de la impresora y de la luz.

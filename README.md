@@ -136,7 +136,9 @@ Ninguna de las dos toca la interfaz web ni el nombre guardado de `cam.html`.
    - `[ESP950]USB`: la salida a la impresora por USB (ESP3D 3.1.3 la trae sin definir).
    - `[ESP902]250000`: la velocidad de Marlin. La Sunlu S8 usa 250000; otras impresoras, 115200.
 4. Reiniciar y entrar a la nueva IP. Conviene reservarla en el router por la MAC de la placa.
-5. En la WEBUI: **Ajustes → Interfaz → SD** activado.
+5. En la WEBUI: **Ajustes → Interfaz → SD** activado, y en **Polling** activar **Enable polling** (la lista ya trae
+   `M105` cada 3000 ms; dejar uno solo). Sin esto la WEBUI se queda en "Waiting for temperatures list available from
+   printer": de fábrica no le pide la temperatura a la impresora.
 6. Abrir **http://<IP>/cam.html** y ponerle nombre con el lápiz.
 7. Conectar el USB de la placa al de la impresora (adaptador OTG) y alimentar la placa por su puerto COM.
 
@@ -179,7 +181,8 @@ El parche de la placa sin cámara sólo trae `platformio.ini` (entorno `esp32-s3
 - `[ESP950]USB`: ESP3D 3.1.3 trae la salida sin definir ("output: ???").
 - `[ESP902]250000`: el Marlin de la S8 trabaja a 250000; a 115200 no contesta.
 - Red de la casa en modo estación. Sin red, ESP3D abre su propia red `ESP3D` (contraseña `12345678`) en http://192.168.0.1.
-- En la WEBUI: **Ajustes → Interfaz → SD** activado, para que aparezca la SD de la placa. Se guarda en cada placa.
+- En la WEBUI: **Ajustes → Interfaz → SD** activado, para que aparezca la SD de la placa, y **Polling → Enable polling**
+  con un solo `M105` cada 3000 ms, para que muestre las temperaturas. Se guarda en cada placa (`preferences.json`).
 
 ## Uso
 

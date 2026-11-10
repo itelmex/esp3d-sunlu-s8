@@ -28,6 +28,7 @@ con la impresora: los relés conectados y el apagado al final de una impresión 
 | `webui/index.html.gz` | ESP3D-WEBUI v3.1.0 para Marlin (`dist/Printer3D/Marlin/` de luc-github/ESP3D-WEBUI) |
 | `webui/cam.html` | Página de la cámara: imagen, avance, relés |
 | `gcode/fin_con_apagado.gcode` | Final de G-code para Cura que apaga la impresora al enfriarse |
+| `binarios/` | Firmware compilado, listo para grabar (ver [Programación](#programación)) |
 | `enfocar.sh` | Ayuda para enfocar el lente |
 
 El código completo de ESP3D (≈270 MB con librerías) no se sube: `preparar.sh` lo reconstruye exacto.
@@ -79,9 +80,65 @@ Del lado de 127 V:
 - **Luz:** blanca de 4000–6500 K en la parte superior de cada nicho, apuntando hacia atrás para que la cámara no vea
   los LEDs. Tira de 12 V con difusor y una fuente que no parpadee.
 
+## Programación
+
+### Binarios listos (`binarios/`)
+
+| Archivo | Para qué | Dirección |
+|---|---|---|
+| `esp3d-3.1.3-sunlu-camara-completo.zip` | **Placa nueva o desde cero.** Descomprimir: trae un `.bin` de 16 MB con todo (arranque, particiones, firmware e interfaz web con `cam.html`) | **0x0** |
+| `esp3d-3.1.3-sunlu-camara-firmware.bin` | **Actualizar** una placa que ya tiene ESP3D, conservando sus ajustes | 0x10000, o por WiFi |
+| `SHA256SUMS.txt` | Para comprobar que se bajaron bien | |
+
+**Placa requerida:** ESP32-S3 con **16 MB de flash y 8 MB de PSRAM octal** (N16R8, por ejemplo "ESP32-S3 CAM" tipo
+Freenove), cámara con los pines de ESP32-S3-EYE y microSD en SDIO (CMD 38, CLK 39, D0 40). Con otra placa hay que
+compilar desde el código (ver abajo).
+
+### Opción 1: en línea, desde el navegador (sin instalar nada)
+
+1. Descomprimir `esp3d-3.1.3-sunlu-camara-completo.zip`.
+2. Conectar la placa a la PC por su puerto **COM** (el del chip CH340, no el USB nativo).
+3. Abrir **https://espressif.github.io/esptool-js/** en **Chrome o Edge** (Firefox no tiene Web Serial).
+4. Baudrate **921600**, **Connect** y elegir el puerto. Si no conecta: mantener **BOOT**, tocar **RESET**, soltar BOOT
+   y volver a intentar.
+5. En *Flash Address* poner **0x0**, elegir `esp3d-3.1.3-sunlu-camara-completo.bin` y presionar **Program**. Tarda
+   1–3 minutos.
+6. Al terminar, tocar **RESET** (o desconectar y conectar).
+
+El archivo completo **borra todo**, incluidos los ajustes guardados: la placa arranca de fábrica.
+
+### Opción 2: con esptool en la terminal
+
+```
+pip install esptool
+esptool.py --chip esp32s3 --port /dev/ttyUSB0 --baud 921600 write_flash 0x0 esp3d-3.1.3-sunlu-camara-completo.bin
+```
+
+En Windows el puerto es `COM3`, `COM4`, etc.
+
+### Actualizar sin perder los ajustes
+
+- **Por WiFi:** en la página completa de ESP3D, en la sección de actualización de firmware, subir
+  `esp3d-3.1.3-sunlu-camara-firmware.bin`.
+- **Por cable:** `esptool.py --chip esp32s3 --port /dev/ttyUSB0 write_flash 0x10000 esp3d-3.1.3-sunlu-camara-firmware.bin`
+
+Ninguna de las dos toca la interfaz web ni el nombre guardado de `cam.html`.
+
+### Primer arranque (después de grabar el completo)
+
+1. Conectarse a la red WiFi **`ESP3D`** (contraseña **`12345678`**) y abrir **http://192.168.0.1**.
+2. Configurar la red de la casa (modo estación) y cambiar la contraseña de administración.
+3. En la consola de ESP3D, una sola vez:
+   - `[ESP950]USB`: la salida a la impresora por USB (ESP3D 3.1.3 la trae sin definir).
+   - `[ESP902]250000`: la velocidad de Marlin. La Sunlu S8 usa 250000; otras impresoras, 115200.
+4. Reiniciar y entrar a la nueva IP. Conviene reservarla en el router por la MAC de la placa.
+5. En la WEBUI: **Ajustes → Interfaz → SD** activado.
+6. Abrir **http://<IP>/cam.html** y ponerle nombre con el lápiz.
+7. Conectar el USB de la placa al de la impresora (adaptador OTG) y alimentar la placa por su puerto COM.
+
 ## Firmware
 
-### Reconstruir y grabar
+### Reconstruir y grabar desde el código
 
 ```
 ./preparar.sh camara                     # o: ./preparar.sh sin-camara

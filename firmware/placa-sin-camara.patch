@@ -1,0 +1,48 @@
+diff -ruN '--exclude=.pio' '--exclude=.pioenvs' '--exclude=.git' '--exclude=data' '--exclude=extra-libraries' '--exclude=libraries' '--exclude=images' '--exclude=docs' '--exclude=embedded' '--exclude=tools' '--exclude=logo' a/esp3d/configuration.h b/esp3d/configuration.h
+--- a/esp3d/configuration.h	2026-11-10 09:41:23.304936594 -0700
++++ b/esp3d/configuration.h	2026-11-09 18:26:59.489868947 -0700
+@@ -78,7 +78,7 @@
+  * Instead of Serial, you can use USB Serial
+  * USB_SERIAL_FEATURE on ESP32  S2/S3 Only
+  */
+-//#define USB_SERIAL_FEATURE
++#define USB_SERIAL_FEATURE   // Sunlu S8: el S3 se conecta al USB de la impresora (anfitrion)
+ 
+ /* Bridge Serial port (deprecated on esp8266 as second serial is)
+  * which serial ESP use to bridge to another device (ESP32 has 3 serials
+@@ -108,7 +108,7 @@
+  * SMOOTHIEWARE
+  * REPETIER
+  */
+-#define DEFAULT_FW UNKNOWN_FW
++#define DEFAULT_FW MARLIN   // Sunlu S8 (Marlin)
+ 
+ /************************************
+  *
+diff -ruN '--exclude=.pio' '--exclude=.pioenvs' '--exclude=.git' '--exclude=data' '--exclude=extra-libraries' '--exclude=libraries' '--exclude=images' '--exclude=docs' '--exclude=embedded' '--exclude=tools' '--exclude=logo' a/platformio.ini b/platformio.ini
+--- a/platformio.ini	2026-11-10 09:41:23.745112483 -0700
++++ b/platformio.ini	2026-11-09 19:03:12.854730973 -0700
+@@ -233,11 +233,10 @@
+ board_build.flash_mode = qio
+ extra_scripts = pre:platformIO/extra_script.py
+ ;uncomment and modify if board is not 4MB
+-;board_upload.flash_size = 16MB
+-;board_build.partitions = default_16MB.csv
++board_upload.flash_size = 16MB   ; ESP32-S3 N16R8 (16 MB, PSRAM octal)
+ ; None
+ build_flags = -DCORE_DEBUG_LEVEL=0 -DARDUINO_USB_CDC_ON_BOOT=0 -DARDUINO_USB_MSC_ON_BOOT=0 -DARDUINO_USB_DFU_ON_BOOT=0  -DCONFIG_IDF_TARGET_ESP32S3=1  -DARDUINO_RUNNING_CORE=1 -DARDUINO_EVENT_RUNNING_CORE=1 -DBOARD_HAS_PSRAM
+-board_build.partitions = min_spiffs.csv
++board_build.partitions = default_16MB.csv
+ upload_speed = 460800
+ 
+ [env:esp32-c3]
+@@ -369,3 +368,9 @@
+     ESP32SSDP
+     TFT_eSPI
+     esp32-usb-serial 
++
++; Placa de Luis (ESP32-S3, 16 MB de flash): variante con PSRAM quad o sin PSRAM
++[env:esp32-s3-luis]
++extends = env:esp32-s3
++board_build.arduino.memory_type = qio_qspi
++board_build.filesystem = littlefs

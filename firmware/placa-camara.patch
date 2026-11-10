@@ -1,0 +1,205 @@
+diff -ruN '--exclude=.pio' '--exclude=.pioenvs' '--exclude=.git' '--exclude=data' '--exclude=extra-libraries' '--exclude=libraries' '--exclude=images' '--exclude=docs' '--exclude=embedded' '--exclude=tools' '--exclude=logo' a/esp3d/configuration.h b/esp3d/configuration.h
+--- a/esp3d/configuration.h	2026-11-10 09:41:23.304936594 -0700
++++ b/esp3d/configuration.h	2026-11-10 09:22:58.839583645 -0700
+@@ -78,7 +78,7 @@
+  * Instead of Serial, you can use USB Serial
+  * USB_SERIAL_FEATURE on ESP32  S2/S3 Only
+  */
+-//#define USB_SERIAL_FEATURE
++#define USB_SERIAL_FEATURE   // Sunlu S8: el S3 se conecta al USB de la impresora (anfitrion)
+ 
+ /* Bridge Serial port (deprecated on esp8266 as second serial is)
+  * which serial ESP use to bridge to another device (ESP32 has 3 serials
+@@ -108,7 +108,7 @@
+  * SMOOTHIEWARE
+  * REPETIER
+  */
+-#define DEFAULT_FW UNKNOWN_FW
++#define DEFAULT_FW MARLIN   // Sunlu S8 (Marlin)
+ 
+ /************************************
+  *
+@@ -300,14 +300,14 @@
+  * ESP_SHARED_SD //Printer SD Card is also connected to ESP3D
+  * Does your system has SD card and how it is connected to your ESP3D
+  */
+- //#define SD_DEVICE_CONNECTION ESP_NOT_SHARED_SD
++ #define SD_DEVICE_CONNECTION ESP_NOT_SHARED_SD   // microSD propia de la placa con camara
+ 
+ /* SD card library
+  * ESP_SD_NATIVE //esp32 / esp8266
+  * ESP_SDIO      //esp32 only
+  * ESP_SDFAT2    //esp8266  / esp32
+  */
+- //#define SD_DEVICE ESP_SDFAT2
++ #define SD_DEVICE ESP_SDIO   // zocalo SD de la placa (SDMMC)
+ 
+ 
+ // #define SD_CARD_TYPE ESP_FYSETC_WIFI_PRO_SDCARD
+@@ -317,7 +317,7 @@
+  * SD_ONE_BIT_MODE
+  * SD_FOUR_BIT_MODE
+  */
+- //#define SDIO_BIT_MODE SD_ONE_BIT_MODE
++ #define SDIO_BIT_MODE SD_ONE_BIT_MODE
+ 
+ /* Enable date/time on files
+  * Set date/time on files using SNTP or last webui connection
+@@ -357,9 +357,9 @@
+  //#define ESP_SD_MISO_PIN 8
+  //#define ESP_SD_MOSI_PIN 9
+  //#define ESP_SD_SCK_PIN  7
+- //#define ESP_SDIO_CMD_PIN 38
+- //#define ESP_SDIO_D0_PIN 40
+- //#define ESP_SDIO_CLK_PIN 39
++ #define ESP_SDIO_CMD_PIN 38
++ #define ESP_SDIO_D0_PIN 40
++ #define ESP_SDIO_CLK_PIN 39
+ 
+ /************************************
+  *
+@@ -545,7 +545,7 @@
+  * CAMERA_MODEL_XIAO_ESP32S3  
+  * Camera connected to ESP board, only ones with PSRAM are supported
+  */
+-// #define CAMERA_DEVICE CAMERA_MODEL_XIAO_ESP32S3
++#define CAMERA_DEVICE CAMERA_MODEL_ESP32S3_EYE   // mismos pines que la Freenove ESP32-S3 CAM
+ 
+ /* Flip vertically
+  * Flip camera vertically
+@@ -555,7 +555,7 @@
+ /* Flip horizontally
+  * Flip camera horizontally
+  */
+-// #define CAMERA_DEVICE_FLIP_HORIZONTALY
++#define CAMERA_DEVICE_FLIP_HORIZONTALY   // Luis: sin esto la imagen sale en espejo (10/11/2026)
+ 
+ /************************************
+  *
+@@ -705,4 +705,11 @@
+ #undef NOTIFICATION_FEATURE
+ #endif
+ 
+-#endif  //_CONFIGURATION_H
+\ No hay ningún carácter de nueva línea al final del archivo
++#endif  //_CONFIGURATION_H
++// ---------------------------------------------------------------- Luis (10/11/2026): reles de la impresora y de la luz
++// Se manejan con [ESP201]P=<pin> V=<0|1> desde cam.html. Al arrancar quedan en reposo (bobina sin energia):
++//  - impresora en el contacto NC: en reposo = impresora ENCENDIDA (si la placa se reinicia, no se apaga la impresion)
++//  - luz en el contacto NA:       en reposo = luz apagada
++#define LUIS_RELE_IMPRESORA 21
++#define LUIS_RELE_LUZ       14
++#define LUIS_RELE_ACTIVO    LOW    // nivel que energiza la bobina: los modulos de 2 reles con optoacoplador se activan con LOW. Igual en cam.html
+diff -ruN '--exclude=.pio' '--exclude=.pioenvs' '--exclude=.git' '--exclude=data' '--exclude=extra-libraries' '--exclude=libraries' '--exclude=images' '--exclude=docs' '--exclude=embedded' '--exclude=tools' '--exclude=logo' a/esp3d/src/core/commands/ESP700.cpp b/esp3d/src/core/commands/ESP700.cpp
+--- a/esp3d/src/core/commands/ESP700.cpp	2026-11-10 09:41:23.306673595 -0700
++++ b/esp3d/src/core/commands/ESP700.cpp	2026-11-09 20:51:59.149881468 -0700
+@@ -53,6 +53,9 @@
+ #endif  // AUTHENTICATION_FEATURE
+ 
+   tmpstr = get_clean_param(msg, cmd_params_pos);
++  // Parche Sunlu S8: ESP3D-WEBUI 3.1 manda "[ESP700]stream=/sd/archivo"; ESP3D espera "/SD/archivo"
++  if (tmpstr.startsWith("stream=")) tmpstr = tmpstr.substring(7);
++  if (tmpstr.startsWith("/sd/")) tmpstr = String("/SD/") + tmpstr.substring(4);
+   if (tmpstr.length() == 0) {
+     hasError = true;
+     error_msg = "Missing parameter";
+diff -ruN '--exclude=.pio' '--exclude=.pioenvs' '--exclude=.git' '--exclude=data' '--exclude=extra-libraries' '--exclude=libraries' '--exclude=images' '--exclude=docs' '--exclude=embedded' '--exclude=tools' '--exclude=logo' a/esp3d/src/core/commands/ESP800.cpp b/esp3d/src/core/commands/ESP800.cpp
+--- a/esp3d/src/core/commands/ESP800.cpp	2026-11-10 09:41:23.306673595 -0700
++++ b/esp3d/src/core/commands/ESP800.cpp	2026-11-09 20:51:59.149746156 -0700
+@@ -158,6 +158,12 @@
+                         requestId)) {
+     return;
+   }
++#if defined(GCODE_HOST_FEATURE)
++  // Parche Sunlu S8: ESP3D-WEBUI 3.1 muestra el boton de imprimir en la SD directa solo si recibe "Streaming"
++  if (!dispatchKeyValue(json, "Streaming", "Enabled", target, requestId)) {
++    return;
++  }
++#endif  // GCODE_HOST_FEATURE
+ 
+   // Serial protocol
+ #if COMMUNICATION_PROTOCOL == MKS_SERIAL
+diff -ruN '--exclude=.pio' '--exclude=.pioenvs' '--exclude=.git' '--exclude=data' '--exclude=extra-libraries' '--exclude=libraries' '--exclude=images' '--exclude=docs' '--exclude=embedded' '--exclude=tools' '--exclude=logo' a/esp3d/src/core/esp3d.cpp b/esp3d/src/core/esp3d.cpp
+--- a/esp3d/src/core/esp3d.cpp	2026-11-10 09:41:23.307673612 -0700
++++ b/esp3d/src/core/esp3d.cpp	2026-11-10 09:21:25.025791393 -0700
+@@ -73,6 +73,13 @@
+ 
+ // Begin which setup everything
+ bool Esp3D::begin() {
++#if defined(LUIS_RELE_IMPRESORA)
++  // Reles en reposo lo antes posible (ver configuration.h)
++  pinMode(LUIS_RELE_IMPRESORA, OUTPUT);
++  digitalWrite(LUIS_RELE_IMPRESORA, LUIS_RELE_ACTIVO == HIGH ? LOW : HIGH);
++  pinMode(LUIS_RELE_LUZ, OUTPUT);
++  digitalWrite(LUIS_RELE_LUZ, LUIS_RELE_ACTIVO == HIGH ? LOW : HIGH);
++#endif  // LUIS_RELE_IMPRESORA
+   BootDelay bd;
+   ESP3DHal::begin();
+   ESP3D_LOG_INIT_FN
+diff -ruN '--exclude=.pio' '--exclude=.pioenvs' '--exclude=.git' '--exclude=data' '--exclude=extra-libraries' '--exclude=libraries' '--exclude=images' '--exclude=docs' '--exclude=embedded' '--exclude=tools' '--exclude=logo' a/esp3d/src/modules/camera/camera.cpp b/esp3d/src/modules/camera/camera.cpp
+--- a/esp3d/src/modules/camera/camera.cpp	2026-11-10 09:41:23.310377217 -0700
++++ b/esp3d/src/modules/camera/camera.cpp	2026-11-10 08:49:57.312065190 -0700
+@@ -34,7 +34,7 @@
+ #include "../filesystem/esp_sd.h"
+ #endif  // SD_DEVICE
+ 
+-#define DEFAULT_FRAME_SIZE FRAMESIZE_SVGA
++#define DEFAULT_FRAME_SIZE FRAMESIZE_VGA  // Luis: 640x480 (era SVGA)
+ #define JPEG_COMPRESSION 80
+ 
+ Camera esp3d_camera;
+@@ -268,7 +268,7 @@
+   config.pin_reset = RESET_GPIO_NUM;
+   config.xclk_freq_hz = 20000000;
+   config.pixel_format = PIXFORMAT_JPEG;
+-  config.jpeg_quality = 5;
++  config.jpeg_quality = 12;  // Luis: mas compresion (era 5)
+   config.fb_count = 1;
+   config.frame_size = DEFAULT_FRAME_SIZE;
+   config.fb_location = CAMERA_FB_IN_PSRAM;
+diff -ruN '--exclude=.pio' '--exclude=.pioenvs' '--exclude=.git' '--exclude=data' '--exclude=extra-libraries' '--exclude=libraries' '--exclude=images' '--exclude=docs' '--exclude=embedded' '--exclude=tools' '--exclude=logo' a/esp3d/src/modules/gcode_host/gcode_host.cpp b/esp3d/src/modules/gcode_host/gcode_host.cpp
+--- a/esp3d/src/modules/gcode_host/gcode_host.cpp	2026-11-10 09:41:23.312646862 -0700
++++ b/esp3d/src/modules/gcode_host/gcode_host.cpp	2026-11-10 09:37:03.806102419 -0700
+@@ -136,6 +136,10 @@
+     if (_response.indexOf("error") != -1) {
+       esp3d_log_e("Got error");
+       _step = HOST_ERROR_STREAM;
++    } else if (_step == HOST_WAIT4_ACK) {
++      // Luis (10/11/2026): Marlin sigue vivo (temperaturas durante M109/M190, "busy: processing" durante
++      // G4, G28, G29...). Sin esto, cualquier orden que tarde mas de 16 s sin "ok" aborta la impresion.
++      _startTimeOut = millis();
+     }
+   }
+   // What is have processing to do
+diff -ruN '--exclude=.pio' '--exclude=.pioenvs' '--exclude=.git' '--exclude=data' '--exclude=extra-libraries' '--exclude=libraries' '--exclude=images' '--exclude=docs' '--exclude=embedded' '--exclude=tools' '--exclude=logo' a/platformio.ini b/platformio.ini
+--- a/platformio.ini	2026-11-10 09:41:23.745112483 -0700
++++ b/platformio.ini	2026-11-09 20:32:07.880521040 -0700
+@@ -233,11 +233,10 @@
+ board_build.flash_mode = qio
+ extra_scripts = pre:platformIO/extra_script.py
+ ;uncomment and modify if board is not 4MB
+-;board_upload.flash_size = 16MB
+-;board_build.partitions = default_16MB.csv
++board_upload.flash_size = 16MB   ; ESP32-S3 N16R8 (16 MB, PSRAM octal)
+ ; None
+ build_flags = -DCORE_DEBUG_LEVEL=0 -DARDUINO_USB_CDC_ON_BOOT=0 -DARDUINO_USB_MSC_ON_BOOT=0 -DARDUINO_USB_DFU_ON_BOOT=0  -DCONFIG_IDF_TARGET_ESP32S3=1  -DARDUINO_RUNNING_CORE=1 -DARDUINO_EVENT_RUNNING_CORE=1 -DBOARD_HAS_PSRAM
+-board_build.partitions = min_spiffs.csv
++board_build.partitions = default_16MB.csv
+ upload_speed = 460800
+ 
+ [env:esp32-c3]
+@@ -369,3 +368,14 @@
+     ESP32SSDP
+     TFT_eSPI
+     esp32-usb-serial 
++
++; Placa de Luis (ESP32-S3, 16 MB de flash): variante con PSRAM quad o sin PSRAM
++[env:esp32-s3-luis]
++extends = env:esp32-s3
++board_build.arduino.memory_type = qio_qspi
++board_build.filesystem = littlefs
++
++; Placa con camara y zocalo SD (ESP32-S3R8: 16 MB de flash, 8 MB de PSRAM octal)
++[env:esp32-s3-camara]
++extends = env:esp32-s3
++board_build.filesystem = littlefs

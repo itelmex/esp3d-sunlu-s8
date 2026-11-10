@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1216">
+<title>Sunlu-S8-B Cam</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='2' y='6' width='20' height='14' rx='3' fill='%23ff7a1a'/%3E%3Ccircle cx='12' cy='13' r='4' fill='%23fff'/%3E%3Crect x='8' y='3' width='8' height='4' rx='1' fill='%23ff7a1a'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #0f1216; --panel: #181c22; --panel2: #1f242c; --line: #2a313b;
+    --txt: #e8ecf1; --mute: #8b95a3; --acc: #ff7a1a; --ok: #2ecc71; --bad: #e74c3c; --warn: #f1c40f;
+    --r: 14px;
+  }
+  @media (prefers-color-scheme: light) {
+    :root { --bg: #eef1f5; --panel: #ffffff; --panel2: #f5f7fa; --line: #dde2e8; --txt: #1b2129; --mute: #677284; }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--txt);
+    font: 15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, sans-serif; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 16px; padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+
+  header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .logo { width: 40px; height: 40px; border-radius: 11px; background: var(--acc); display: grid; place-items: center; flex: none;
+    box-shadow: 0 6px 18px color-mix(in srgb, var(--acc) 40%, transparent); }
+  .logo svg { width: 22px; height: 22px; }
+  h1 { font-size: 18px; margin: 0; font-weight: 650; letter-spacing: .2px; }
+  .sub { color: var(--mute); font-size: 13px; }
+  .pill { margin-left: auto; display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 999px;
+    background: var(--panel); border: 1px solid var(--line); font-size: 13px; white-space: nowrap; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--mute); }
+  .on .dot { background: var(--ok); box-shadow: 0 0 0 0 var(--ok); animation: pulso 2s infinite; }
+  .off .dot { background: var(--bad); }
+  @keyframes pulso { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--ok) 60%, transparent); }
+                     100% { box-shadow: 0 0 0 10px transparent; } }
+
+  .grid { display: grid; grid-template-columns: 1fr 300px; gap: 14px; align-items: start; }
+  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+  .view { position: relative; background: #000; aspect-ratio: 4 / 3; display: grid; place-items: center; overflow: hidden; }
+  .view.vertical { aspect-ratio: 3 / 4; max-height: 78vh; margin: 0 auto; }
+  .view img { width: 100%; height: 100%; object-fit: contain; transition: transform .25s ease; }
+  .view.r90 img, .view.r270 img { width: 133.34%; height: 75%; max-width: none; flex: none; }
+  .view.r90 img { transform: rotate(90deg); } .view.r180 img { transform: rotate(180deg); } .view.r270 img { transform: rotate(270deg); }
+  .badge { position: absolute; left: 10px; top: 10px; padding: 4px 9px; border-radius: 8px; font-size: 12px;
+    background: rgba(0,0,0,.55); color: #fff; backdrop-filter: blur(4px); display: flex; gap: 6px; align-items: center; }
+  .rec { width: 7px; height: 7px; border-radius: 50%; background: var(--bad); }
+  .paused .rec { background: var(--warn); }
+  .msg { position: absolute; inset: 0; display: none; place-items: center; color: #fff; background: rgba(0,0,0,.6); font-size: 15px; }
+  .off .msg { display: grid; }
+
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; border-top: 1px solid var(--line); background: var(--panel2); }
+  button, .btn { appearance: none; border: 1px solid var(--line); background: var(--panel); color: var(--txt); border-radius: 10px;
+    padding: 8px 12px; font: inherit; font-size: 14px; cursor: pointer; display: inline-flex; gap: 6px; align-items: center;
+    text-decoration: none; transition: background .15s, border-color .15s; }
+  button:hover, .btn:hover { border-color: var(--acc); }
+  button svg, .btn svg { width: 16px; height: 16px; }
+  .sp { flex: 1; }
+  select { appearance: none; border: 1px solid var(--line); background: var(--panel); color: var(--txt); border-radius: 10px;
+    padding: 8px 12px; font: inherit; font-size: 14px; }
+
+  .side { display: flex; flex-direction: column; gap: 14px; }
+  .box { padding: 16px; }
+  .box h2 { margin: 0 0 12px; font-size: 13px; text-transform: uppercase; letter-spacing: .8px; color: var(--mute); font-weight: 600; }
+  .big { font-size: 34px; font-weight: 700; line-height: 1; }
+  .prog { height: 10px; border-radius: 99px; background: var(--panel2); border: 1px solid var(--line); overflow: hidden; margin: 12px 0 10px; }
+  .prog i { display: block; height: 100%; width: 0; border-radius: 99px;
+    background: linear-gradient(90deg, var(--acc), #ffb21a); transition: width .6s ease; }
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; font-size: 14px; }
+  .kv span:nth-child(odd) { color: var(--mute); }
+  .kv span:nth-child(even) { text-align: right; font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file { font-size: 14px; word-break: break-all; color: var(--txt); }
+  footer { color: var(--mute); font-size: 12px; text-align: center; margin-top: 14px; }
+
+
+  .ctl { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+  .ctl:first-of-type { border-top: 0; padding-top: 0; }
+  .ctl .ico { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: var(--panel2); border: 1px solid var(--line); flex: none; }
+  .ctl .ico svg { width: 18px; height: 18px; }
+  .ctl .t { flex: 1; min-width: 0; } .ctl .t b { display: block; font-weight: 600; } .ctl .t small { color: var(--mute); font-size: 12px; }
+  .sw { position: relative; width: 52px; height: 30px; flex: none; }
+  .sw input { opacity: 0; width: 0; height: 0; position: absolute; }
+  .sw span { position: absolute; inset: 0; border-radius: 99px; background: var(--line); transition: background .2s; cursor: pointer; }
+  .sw span::after { content: ""; position: absolute; left: 3px; top: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+  .sw input:checked + span { background: var(--ok); }
+  .sw input:checked + span::after { transform: translateX(22px); }
+  .sw input:disabled + span { opacity: .45; cursor: wait; }
+  .on-luz .ico { background: color-mix(in srgb, var(--warn) 22%, var(--panel2)); border-color: var(--warn); }
+  .on-imp .ico { background: color-mix(in srgb, var(--ok) 18%, var(--panel2)); border-color: var(--ok); }
+  .nota { margin-top: 8px; font-size: 12px; color: var(--mute); min-height: 16px; }
+  .nota.warn { color: var(--warn); }
+
+  :fullscreen .view, .view:fullscreen { aspect-ratio: auto; height: 100vh; max-height: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 8h3l2-3h8l2 3h3v11H3z"/><circle cx="12" cy="13" r="3.5"/></svg></div>
+    <div>
+      <h1>Sunlu-S8-B Cam</h1>
+      <div class="sub">Impresora Sunlu S8 · ESP3D</div>
+    </div>
+    <div class="pill" id="estado"><span class="dot"></span><span id="estadoTxt">Conectando…</span></div>
+  </header>
+
+  <div class="grid">
+    <div class="card">
+      <div class="view" id="view">
+        <img id="foto" alt="Cámara de la impresora">
+        <div class="badge" id="badge"><span class="rec"></span><span id="badgeTxt">EN VIVO</span></div>
+        <div class="msg">Sin imagen · reintentando…</div>
+      </div>
+      <div class="bar">
+        <button id="bPausa" title="Pausar o seguir la imagen">
+          <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg><span>Pausar</span></button>
+        <button id="bGira" title="Girar la imagen 90°">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/></svg>Girar</button>
+        <select id="sRitmo" title="Cada cuánto pedir una foto">
+          <option value="0">Lo más rápido</option>
+          <option value="1000" selected>Cada 1 s</option>
+          <option value="5000">Cada 5 s</option>
+          <option value="30000">Cada 30 s</option>
+        </select>
+        <span class="sp"></span>
+        <a class="btn" id="bBajar" download title="Guardar la foto actual">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>Foto</a>
+        <button id="bPantalla" title="Pantalla completa">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+      </div>
+    </div>
+
+    <div class="side">
+      <div class="card box">
+        <h2>Impresión</h2>
+        <div class="big" id="pct">—</div>
+        <div class="prog"><i id="barra"></i></div>
+        <div class="file" id="archivo">Sin impresión desde la SD de la placa</div>
+      </div>
+      <div class="card box">
+        <h2>Detalles</h2>
+        <div class="kv">
+          <span>Estado</span><span id="dEstado">—</span>
+          <span>Transcurrido</span><span id="dTrans">—</span>
+          <span>Restante aprox.</span><span id="dRest">—</span>
+          <span>Enviado</span><span id="dBytes">—</span>
+        </div>
+      </div>
+      <div class="card box">
+        <h2>Control</h2>
+        <div class="ctl" id="cImp">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v9"/><path d="M6.3 7.5a8 8 0 1 0 11.4 0"/></svg></div>
+          <div class="t"><b>Impresora</b><small id="tImp">—</small></div>
+          <label class="sw"><input type="checkbox" id="swImp"><span></span></label>
+        </div>
+        <div class="ctl" id="cLuz">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg></div>
+          <div class="t"><b>Luz</b><small id="tLuz">—</small></div>
+          <label class="sw"><input type="checkbox" id="swLuz"><span></span></label>
+        </div>
+        <div class="nota" id="nota"></div>
+      </div>
+      <div class="card box">
+        <h2>Cámara</h2>
+        <div class="kv">
+          <span>Última foto</span><span id="cHora">—</span>
+          <span>Tiempo de llegada</span><span id="cMs">—</span>
+          <span>Resolución</span><span id="cRes">—</span>
+        </div>
+        <div style="margin-top:14px"><a class="btn" href="/" style="width:100%;justify-content:center">Abrir ESP3D completo</a></div>
+      </div>
+    </div>
+  </div>
+  <div class="card box" id="aviso" style="display:none;margin-top:14px;border-color:var(--warn)">Imprimiendo: la cámara se actualiza cada 30 s para no frenar el envío de G-code a la impresora.</div>
+  <footer>El avance es el de las impresiones lanzadas desde la SD de la placa (botón ▶ en ESP3D).</footer>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const view = $("view"), foto = $("foto");
+  const guarda = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+  const lee = (k, d) => { try { return localStorage.getItem(k) ?? d; } catch (e) { return d; } };
+
+  // ---------- cámara: una foto a la vez, nunca se amontonan pedidos
+  let imprimiendo = false, pausa = false, giro = +lee("giro", 0), ritmo = +lee("ritmo", 1000), t0 = 0, urlPrev = null, timer = null;
+  $("sRitmo").value = String(ritmo);
+  aplicaGiro();
+
+  async function pideFoto() {
+    clearTimeout(timer);
+    if (pausa || document.hidden) return;
+    t0 = performance.now();
+    try {
+      const r = await fetch("/snap?t=" + Date.now(), { cache: "no-store" });
+      if (!r.ok) throw 0;
+      const blob = await r.blob();
+      const url = URL.createObjectURL(blob);
+      foto.onload = () => {
+        if (urlPrev) URL.revokeObjectURL(urlPrev);
+        urlPrev = url;
+        $("cRes").textContent = foto.naturalWidth + "×" + foto.naturalHeight;
+      };
+      foto.src = url;
+      $("bBajar").href = url;
+      $("bBajar").download = "sunlu-s8-" + new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-") + ".jpg";
+      $("cHora").textContent = new Date().toLocaleTimeString();
+      $("cMs").textContent = Math.round(performance.now() - t0) + " ms · " + (blob.size / 1024).toFixed(1) + " KB";
+      enLinea(true);
+    } catch (e) {
+      enLinea(false);
+    }
+    // Mientras imprime, una foto cada 30 s como mínimo: enviar la foto detiene el envío de G-code
+    timer = setTimeout(pideFoto, imprimiendo ? Math.max(ritmo, 30000) : ritmo);
+  }
+
+  function enLinea(si) {
+    $("estado").className = "pill " + (si ? "on" : "off");
+    $("estadoTxt").textContent = si ? "En línea" : "Sin conexión";
+    view.classList.toggle("off", !si);
+  }
+
+  function aplicaGiro() {
+    view.classList.remove("r90", "r180", "r270", "vertical");
+    if (giro) view.classList.add("r" + giro);
+    if (giro === 90 || giro === 270) view.classList.add("vertical");
+  }
+
+  $("bPausa").onclick = () => {
+    pausa = !pausa;
+    $("bPausa").querySelector("span").textContent = pausa ? "Seguir" : "Pausar";
+    $("badge").classList.toggle("paused", pausa);
+    $("badgeTxt").textContent = pausa ? "PAUSA" : "EN VIVO";
+    if (!pausa) pideFoto();
+  };
+  $("bGira").onclick = () => { giro = (giro + 90) % 360; guarda("giro", giro); aplicaGiro(); };
+  $("sRitmo").onchange = e => { ritmo = +e.target.value; guarda("ritmo", ritmo); pideFoto(); };
+  $("bPantalla").onclick = () => {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else (view.requestFullscreen || view.webkitRequestFullscreen).call(view);
+  };
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) { pideFoto(); estadoImpresion(); } });
+
+  // ---------- avance de la impresión desde la SD de la placa ([ESP701])
+  let inicio = null, nombrePrev = "";
+  const fmtT = s => { s = Math.max(0, Math.round(s)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60);
+    return h ? h + " h " + m + " min" : m + " min " + (s % 60) + " s"; };
+  const fmtB = b => b > 1048576 ? (b / 1048576).toFixed(1) + " MB" : (b / 1024).toFixed(0) + " KB";
+
+  async function estadoImpresion() {
+    if (document.hidden) return;
+    try {
+      const r = await fetch("/command?cmd=" + encodeURIComponent("[ESP701]json"), { cache: "no-store" });
+      const j = await r.json();
+      let d = j.data;
+      if (typeof d === "string") { try { d = JSON.parse(d); } catch (e) {} }
+      if (d && typeof d === "object" && d.status === "processing") {
+        const tot = +d.total || 0, hecho = +d.processed || 0, p = tot ? hecho / tot * 100 : 0;
+        const nombre = (d.name || "").replace(/^\/(sd|SD|fs|FS)\//, "");
+        if (nombre !== nombrePrev || !inicio) { inicio = Date.now() - +lee("trans:" + nombre, 0); nombrePrev = nombre; }
+        const trans = (Date.now() - inicio) / 1000;
+        guarda("trans:" + nombre, Date.now() - inicio);
+        $("pct").textContent = p.toFixed(1) + " %";
+        $("barra").style.width = p + "%";
+        $("archivo").textContent = nombre || "Imprimiendo";
+        $("dEstado").textContent = "Imprimiendo";
+        $("dTrans").textContent = fmtT(trans);
+        $("dRest").textContent = p > 1 ? fmtT(trans * (100 - p) / p) : "calculando…";
+        $("dBytes").textContent = fmtB(hecho) + " de " + fmtB(tot);
+        modoImpresion(true);
+      } else {
+        const txt = typeof d === "string" ? d : (d && d.status) || "";
+        const pausado = txt === "pause";
+        modoImpresion(pausado);
+        if (!pausado) { inicio = null; }
+        $("dEstado").textContent = pausado ? "En pausa" : "Sin impresión";
+        if (!pausado) {
+          $("pct").textContent = "—"; $("barra").style.width = "0";
+          $("archivo").textContent = "Sin impresión desde la SD de la placa";
+          $("dTrans").textContent = $("dRest").textContent = $("dBytes").textContent = "—";
+        }
+      }
+    } catch (e) { /* la cámara ya indica si no hay conexión */ }
+  }
+
+
+  // ---------- relés (GPIO de esta placa, ver configuration.h del firmware)
+  const RELE = { impresora: 21, luz: 14 }, ACTIVO = 0;   // ACTIVO: nivel que energiza la bobina (módulo con optoacoplador: 0)
+  // Impresora en el contacto NC: bobina energizada = impresora APAGADA. Luz en el NA: energizada = luz encendida.
+  const TEMP_SEGURA = 50;
+  let esperaFrio = null;
+  const nota = (t, warn) => { $("nota").textContent = t || ""; $("nota").className = "nota" + (warn ? " warn" : ""); };
+
+  async function cmd(c) {
+    const r = await fetch("/command?cmd=" + encodeURIComponent(c), { cache: "no-store" });
+    const t = await r.text();
+    try { const j = JSON.parse(t); return String(j.data ?? ""); } catch (e) { return t.trim(); }
+  }
+  const leePin = async p => (await cmd(`[ESP201]P=${p} json`)).trim() === "1" ? 1 : 0;
+  const ponPin = (p, v) => cmd(`[ESP201]P=${p} V=${v}`);
+
+  function pinta(impOn, luzOn) {
+    $("swImp").checked = impOn; $("swLuz").checked = luzOn;
+    $("tImp").textContent = impOn ? "Encendida" : "Apagada";
+    $("tLuz").textContent = luzOn ? "Encendida" : "Apagada";
+    $("cImp").classList.toggle("on-imp", impOn); $("cLuz").classList.toggle("on-luz", luzOn);
+  }
+  async function leeReles() {
+    try {
+      const imp = await leePin(RELE.impresora), luz = await leePin(RELE.luz);
+      pinta(imp !== ACTIVO, luz === ACTIVO);
+    } catch (e) {}
+  }
+
+  // Temperatura del hotend: se pide M105 y la respuesta llega por el websocket de ESP3D (puerto 81).
+  // Abrirlo desconecta la página completa de ESP3D si está abierta en otra pestaña.
+  function leeHotend() {
+    return new Promise(res => {
+      let ws, listo = false;
+      const fin = v => { if (listo) return; listo = true; try { ws.close(); } catch (e) {} res(v); };
+      try { ws = new WebSocket(`ws://${location.hostname}:81/`, ["webui-v3"]); } catch (e) { return res(null); }
+      ws.binaryType = "arraybuffer";
+      let buf = "";
+      ws.onmessage = ev => {
+        if (typeof ev.data === "string") return;
+        buf += new TextDecoder().decode(ev.data);
+        const m = buf.match(/T:\s*([\d.]+)/);
+        if (m) fin(parseFloat(m[1]));
+      };
+      ws.onopen = () => cmd("M105").catch(() => {});
+      ws.onerror = () => fin(null);
+      setTimeout(() => fin(null), 5000);
+    });
+  }
+
+  async function imprimiendoAhora() {
+    try {
+      let d = await cmd("[ESP701]json");
+      try { d = JSON.parse(d); } catch (e) {}
+      const st = typeof d === "object" ? d.status : d;
+      return st === "processing" || st === "pause";
+    } catch (e) { return false; }
+  }
+
+  async function apagaImpresora() {
+    if (await imprimiendoAhora()) { nota("Hay una impresión en curso: no se apaga.", true); return false; }
+    nota("Revisando la temperatura del hotend…");
+    const t = await leeHotend();
+    if (t !== null && t >= TEMP_SEGURA) {
+      if (!confirm(`El hotend está a ${t.toFixed(0)} °C.\n\n¿Apagarla automáticamente cuando baje de ${TEMP_SEGURA} °C?\n(Deja esta pestaña abierta)`)) { nota(""); return false; }
+      esperarFrio();
+      return false;
+    }
+    if (!confirm(t === null ? "No se pudo leer la temperatura (¿la impresora no responde?).\n\n¿Apagarla de todos modos?"
+                            : `Hotend a ${t.toFixed(0)} °C. ¿Apagar la impresora?`)) { nota(""); return false; }
+    await ponPin(RELE.impresora, ACTIVO);
+    nota("");
+    return true;
+  }
+
+  function esperarFrio() {
+    clearInterval(esperaFrio);
+    const paso = async () => {
+      if (await imprimiendoAhora()) { clearInterval(esperaFrio); esperaFrio = null; nota("Empezó una impresión: se canceló el apagado.", true); return; }
+      const t = await leeHotend();
+      if (t === null) { nota("Esperando que enfríe… (sin lectura, reintentando)", true); return; }
+      if (t < TEMP_SEGURA) {
+        clearInterval(esperaFrio); esperaFrio = null;
+        await ponPin(RELE.impresora, ACTIVO); await leeReles();
+        nota(`Apagada a ${t.toFixed(0)} °C.`);
+      } else nota(`Esperando que enfríe: ${t.toFixed(0)} °C → apagar a ${TEMP_SEGURA} °C. Toca el interruptor para cancelar.`, true);
+    };
+    paso(); esperaFrio = setInterval(paso, 20000);
+  }
+
+  $("swImp").onchange = async e => {
+    const quiere = e.target.checked;
+    e.target.checked = !quiere;          // se pinta cuando la placa confirme
+    if (esperaFrio) { clearInterval(esperaFrio); esperaFrio = null; nota("Apagado automático cancelado."); return; }
+    e.target.disabled = true;
+    try {
+      if (quiere) await ponPin(RELE.impresora, ACTIVO ? 0 : 1);
+      else await apagaImpresora();
+    } catch (err) { nota("No se pudo cambiar el relé.", true); }
+    e.target.disabled = false;
+    leeReles();
+  };
+  $("swLuz").onchange = async e => {
+    const quiere = e.target.checked;
+    e.target.disabled = true;
+    try { await ponPin(RELE.luz, quiere ? ACTIVO : (ACTIVO ? 0 : 1)); } catch (err) { nota("No se pudo cambiar el relé.", true); }
+    e.target.disabled = false;
+    leeReles();
+  };
+
+  function modoImpresion(si) {
+    if (si === imprimiendo) return;
+    imprimiendo = si;
+    $("aviso").style.display = si ? "block" : "none";
+    if (!si) pideFoto();
+  }
+
+  pideFoto();
+  estadoImpresion();
+  leeReles();
+  setInterval(() => { if (!document.hidden) leeReles(); }, 10000);
+  setInterval(estadoImpresion, 5000);
+})();
+</script>
+</body>
+</html>

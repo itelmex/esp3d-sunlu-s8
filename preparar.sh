@@ -1,4 +1,5 @@
 #!/bin/bash
+# Luis (@itelmex), 2026. GPL-3.0. Parte de https://github.com/itelmex/esp3d-sunlu-s8 (basado en ESP3D v3.1.3)
 # Reconstruye el codigo de ESP3D v3.1.3 con los cambios de este repo, listo para compilar con PlatformIO.
 #   ./preparar.sh camara       -> build/ESP3D-3.1.3-camara     (entorno esp32-s3-camara)
 #   ./preparar.sh sin-camara   -> build/ESP3D-3.1.3            (entorno esp32-s3-luis)

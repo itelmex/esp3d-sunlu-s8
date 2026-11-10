@@ -1,6 +1,14 @@
 # ESP3D para la Sunlu S8 — cámara, SD por WiFi, relés y apagado automático
 
-Accesorio WiFi para la impresora **Sunlu S8** (Marlin) basado en **ESP3D v3.1.3** sobre un **ESP32-S3 con cámara**.
+Accesorio WiFi para la impresora **Sunlu S8** (Marlin) sobre un **ESP32-S3 con cámara**.
+
+> **Basado en [ESP3D](https://github.com/luc-github/ESP3D) v3.1.3** (etiqueta `v3.1.3`, 22/07/2026) de Luc Lebosse y
+> colaboradores, y en **[ESP3D-WEBUI](https://github.com/luc-github/ESP3D-WEBUI) v3.1.0** (Printer3D / Marlin).
+> Este repositorio sólo contiene los cambios sobre esa versión (`firmware/*.patch`), una página propia para la cámara
+> y la documentación. El mérito de ESP3D es de sus autores; ver [Créditos](#créditos).
+
+Sirve para cualquier impresora con Marlin por USB; la Sunlu S8 es la que está probada. Los datos de mi instalación
+(IP 192.168.1.15, MAC de las placas, nombre "Sunlu-S8-B") son ejemplos: cada quien pone los suyos.
 
 - Sube los G-code por WiFi a la microSD de la placa y los imprime (botón ▶).
 - Muestra la cámara en una página propia con el avance de la impresión.
@@ -191,3 +199,35 @@ otra pestaña: recargarla.
   impresión con el arreglo de `gcode_host.cpp`.
 - No se puede subir a la SD de la impresora desde la WEBUI: sólo lo permite el protocolo MKS.
 - No hay complemento de Cura para ESP3D. Opciones: WebDAV o un script de envío.
+
+## Autor
+
+**Luis** — [@itelmex](https://github.com/itelmex) · developer@melonmind.app
+
+Adaptación, parches, página de la cámara, relés y documentación (noviembre de 2026), con ayuda de Claude (Anthropic).
+
+## Créditos
+
+Este proyecto no existiría sin el trabajo de:
+
+| Proyecto | Autores | Licencia | Uso aquí |
+|---|---|---|---|
+| [ESP3D](https://github.com/luc-github/ESP3D) v3.1.3 | **Luc Lebosse** ([@luc-github](https://github.com/luc-github)) y los [colaboradores de ESP3D](https://github.com/luc-github/ESP3D#contributors-) | GPL-3.0 | Firmware base; los parches se aplican sobre él |
+| [ESP3D-WEBUI](https://github.com/luc-github/ESP3D-WEBUI) v3.1.0 | **Luc Lebosse** y colaboradores | GPL-3.0 | `webui/index.html.gz`, sin cambios |
+| [esp32-camera](https://github.com/espressif/esp32-camera) | Espressif Systems | Apache-2.0 | Controlador de la cámara (lo trae ESP3D) |
+| [Arduino-ESP32](https://github.com/espressif/arduino-esp32) y ESP-IDF | Espressif Systems y colaboradores | LGPL-2.1 / Apache-2.0 | Núcleo para compilar |
+| [pioarduino platform-espressif32](https://github.com/pioarduino/platform-espressif32) y [PlatformIO](https://platformio.org) | pioarduino, PlatformIO Labs | Apache-2.0 | Compilación |
+| [arduinoWebSockets](https://github.com/Links2004/arduinoWebSockets) 2.6.1 | Markus Sattler (Links2004) | LGPL-2.1 | Websocket de ESP3D (incluida en ESP3D) |
+| [esp32-usb-serial](https://github.com/luc-github/esp32-usb-serial) 1.0.1 | Luc Lebosse | Apache-2.0 | USB anfitrión hacia la impresora (incluida en ESP3D) |
+| [ESP32SSDP](https://github.com/luc-github/ESP32SSDP) 2.0.3 | Me-No-Dev, mantenida por Luc Lebosse | GPL-3.0 | Descubrimiento en la red (incluida en ESP3D) |
+| Las demás librerías de `libraries/` de ESP3D | Sus autores | Ver cada una | Incluidas en ESP3D |
+| [Marlin](https://github.com/MarlinFirmware/Marlin) | MarlinFirmware y colaboradores | GPL-3.0 | Firmware de la impresora (no se modifica) |
+
+Sunlu y S8 son marcas de sus dueños; este proyecto no tiene relación con ellos. Cura (UltiMaker) sólo se menciona para
+el G-code final.
+
+## Licencia
+
+**GPL-3.0** (archivo `LICENSE`), la misma de ESP3D, del que este trabajo es derivado. Puedes usarlo, modificarlo y
+compartirlo bajo esa licencia, manteniendo los créditos. Se ofrece tal cual, sin garantía: **la parte de 127 V
+(relés) la conecta cada quien bajo su responsabilidad**.

@@ -1,4 +1,5 @@
 #!/bin/bash
+# Luis (@itelmex), 2026. GPL-3.0. Parte de https://github.com/itelmex/esp3d-sunlu-s8 (basado en ESP3D v3.1.3)
 # Ayuda para enfocar la camara de ESP3D: toma fotos seguidas y muestra su "nitidez".
 # Con la misma escena y la misma calidad, una foto enfocada pesa mas (tiene mas detalle).
 # Gira el lente muy poco entre lecturas y busca el numero mas alto.

@@ -1,6 +1,6 @@
 diff -ruN '--exclude=.pio' '--exclude=.pioenvs' '--exclude=.git' '--exclude=data' '--exclude=extra-libraries' '--exclude=libraries' '--exclude=images' '--exclude=docs' '--exclude=embedded' '--exclude=tools' '--exclude=logo' a/esp3d/configuration.h b/esp3d/configuration.h
 --- a/esp3d/configuration.h	2026-11-10 09:41:23.304936594 -0700
-+++ b/esp3d/configuration.h	2026-11-10 09:22:58.839583645 -0700
++++ b/esp3d/configuration.h	2026-11-10 10:07:28.700200638 -0700
 @@ -78,7 +78,7 @@
   * Instead of Serial, you can use USB Serial
   * USB_SERIAL_FEATURE on ESP32  S2/S3 Only
@@ -76,7 +76,7 @@ diff -ruN '--exclude=.pio' '--exclude=.pioenvs' '--exclude=.git' '--exclude=data
  
  /************************************
   *
-@@ -705,4 +705,11 @@
+@@ -705,4 +705,12 @@
  #undef NOTIFICATION_FEATURE
  #endif
  
@@ -89,7 +89,41 @@ diff -ruN '--exclude=.pio' '--exclude=.pioenvs' '--exclude=.git' '--exclude=data
 +//  - luz en el contacto NA:       en reposo = luz apagada
 +#define LUIS_RELE_IMPRESORA 21
 +#define LUIS_RELE_LUZ       14
++#define LUIS_PIN_APAGAR_AL_TERMINAR 100   // pin virtual de [ESP201]: 1 = el G-code final puede apagar la impresora (arranca en 0)
 +#define LUIS_RELE_ACTIVO    LOW    // nivel que energiza la bobina: los modulos de 2 reles con optoacoplador se activan con LOW. Igual en cam.html
+diff -ruN '--exclude=.pio' '--exclude=.pioenvs' '--exclude=.git' '--exclude=data' '--exclude=extra-libraries' '--exclude=libraries' '--exclude=images' '--exclude=docs' '--exclude=embedded' '--exclude=tools' '--exclude=logo' a/esp3d/src/core/commands/ESP201.cpp b/esp3d/src/core/commands/ESP201.cpp
+--- a/esp3d/src/core/commands/ESP201.cpp	2026-11-10 09:41:23.305734962 -0700
++++ b/esp3d/src/core/commands/ESP201.cpp	2026-11-10 10:07:28.700004326 -0700
+@@ -84,6 +84,29 @@
+     int pin = P.toInt();
+     esp3d_log("P=%d V=%s RAW=%d PULLUP=%d ANALOG=%d RANGE=%d", pin, V.c_str(),
+               isRAW, isPULLUP, isANALOG, analog_range);
++#if defined(LUIS_PIN_APAGAR_AL_TERMINAR)
++    // Luis (10/11/2026): interruptor "Apagar al terminar" de cam.html. Pin virtual, en RAM: arranca desactivado.
++    static bool apagarAlTerminar = false;
++    bool luisHecho = false;
++    if (pin == LUIS_PIN_APAGAR_AL_TERMINAR) {
++      if (V.length() > 0) apagarAlTerminar = (V.toInt() == 1);
++      ok_msg = apagarAlTerminar ? "1" : "0";
++      luisHecho = true;
++    } else if (pin == LUIS_RELE_IMPRESORA && V.length() > 0 &&
++               target == ESP3DClientType::no_client &&
++               V.toInt() == (LUIS_RELE_ACTIVO == HIGH ? 1 : 0)) {
++      // Orden de apagar que viene de un archivo en impresion (G-code final): solo si el interruptor esta activado.
++      // Se usa una vez: despues del apagado vuelve a quedar desactivado.
++      if (!apagarAlTerminar) {
++        esp3d_log("Apagado al terminar desactivado: se ignora");
++        luisHecho = true;
++      } else {
++        apagarAlTerminar = false;
++      }
++    }
++    if (luisHecho) {
++    } else
++#endif  // LUIS_PIN_APAGAR_AL_TERMINAR
+     if (!ESP3DHal::is_pin_usable(pin)) {
+       hasError = true;
+       error_msg = "Invalid pin";
 diff -ruN '--exclude=.pio' '--exclude=.pioenvs' '--exclude=.git' '--exclude=data' '--exclude=extra-libraries' '--exclude=libraries' '--exclude=images' '--exclude=docs' '--exclude=embedded' '--exclude=tools' '--exclude=logo' a/esp3d/src/core/commands/ESP700.cpp b/esp3d/src/core/commands/ESP700.cpp
 --- a/esp3d/src/core/commands/ESP700.cpp	2026-11-10 09:41:23.306673595 -0700
 +++ b/esp3d/src/core/commands/ESP700.cpp	2026-11-09 20:51:59.149881468 -0700

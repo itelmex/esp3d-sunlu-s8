@@ -98,6 +98,7 @@ cd build/ESP3D-3.1.3-camara
 | `configuration.h` | `USB_SERIAL_FEATURE`, `DEFAULT_FW MARLIN`, SD `ESP_NOT_SHARED_SD` + `ESP_SDIO` 1 bit 38/39/40, `CAMERA_MODEL_ESP32S3_EYE`, `CAMERA_DEVICE_FLIP_HORIZONTALY`, `LUIS_RELE_*` | Hardware de esta placa |
 | `camera.cpp` | 640×480 (era 800×600) y calidad JPEG 12 (era 5) | Fotos de ≈12–17 KB: menos carga para la placa |
 | `esp3d.cpp` | Pone los relés en reposo lo primero al arrancar | Que la impresora no se apague al reiniciar la placa |
+| `ESP201.cpp` | Pin virtual 100 = "Apagar al terminar"; la orden de apagar desde un archivo se ignora si está desactivado | Apagado al final optativo |
 | `ESP800.cpp` | Reporta `"Streaming":"Enabled"` | Sin esto la WEBUI 3.1.0 no muestra el ▶ en la SD de la placa |
 | `ESP700.cpp` | Acepta `stream=/sd/archivo` y lo convierte a `/SD/archivo` | Es lo que manda el ▶ de la WEBUI 3.1.0 |
 | `gcode_host.cpp` | Cualquier línea de Marlin mientras espera el `ok` reinicia el plazo de 16 s | Sin esto, una orden larga (M190, M109, G28, G29, G4) aborta la impresión desde la SD de la placa |
@@ -121,7 +122,7 @@ El parche de la placa sin cámara sólo trae `platformio.ini` (entorno `esp32-s3
     la placa + " Cam". Así la misma página sirve para cualquier impresora.
   - Imagen en vivo, con pausar, girar 90°, ritmo de las fotos, guardar foto y pantalla completa.
   - Avance de la impresión desde la SD de la placa: porcentaje, archivo, transcurrido, restante aproximado.
-  - **Control:** interruptores de la impresora y de la luz.
+  - **Control:** interruptores de la impresora, de la luz y de **Apagar al terminar**.
 - **http://192.168.1.15/**: ESP3D-WEBUI completa (archivos, consola, temperaturas, macros).
 - **http://192.168.1.15/snap**: una foto suelta.
 
@@ -139,11 +140,20 @@ cada foto frena el envío ≈1–1.5 s, lo que puede dejar grumos en curvas. Por
 
 ### Apagado automático al terminar
 
-Pegar `gcode/fin_con_apagado.gcode` **al final** del G-code final de la impresora en Cura. Al terminar la pieza:
+**Es optativo:** se controla con el interruptor **Apagar al terminar** de `cam.html`.
+- **Arranca desactivado** cada vez que la placa se enciende: al terminar, la impresora queda prendida.
+- Activado, la impresora se apaga al terminar y el interruptor **vuelve solo a desactivado** (se usa una vez).
+  Se puede activar con la impresión en curso, por ejemplo en la noche.
+- Vive en la RAM del firmware (pin virtual 100 de `[ESP201]`): `[ESP201]P=100 V=1` lo activa y `[ESP201]P=100` lo lee.
+  Sólo afecta a la orden de apagar que viene **de un archivo en impresión**; el interruptor **Impresora** de la página
+  apaga siempre.
+
+Pegar `gcode/fin_con_apagado.gcode` **al final** del G-code final de la impresora en Cura y dejarlo siempre. Al terminar la pieza:
 
 1. Apaga hotend, cama y ventilador de capa.
 2. Espera con `M109 R50` a que el hotend baje a 50 °C, y luego 60 s más con el ventilador del disipador.
-3. Con `[ESP201]P=21 V=0` energiza el relé 1 y apaga la impresora. La placa y la cámara siguen encendidas.
+3. Con `[ESP201]P=21 V=0` energiza el relé 1 y apaga la impresora, si el interruptor está activado. La placa y la
+   cámara siguen encendidas.
 
 - Sólo funciona **imprimiendo desde la SD de la placa**: ESP3D ejecuta las líneas `[ESP…]` del archivo. Desde la SD de la
   impresora, Marlin la ignora y la impresora queda encendida.
@@ -175,7 +185,8 @@ otra pestaña: recargarla.
 
 - Conectar el módulo de relés y confirmar la polaridad (LOW = activo) y que suelte con 3.3 V.
 - Probar con la impresora la lectura de la temperatura en `cam.html` y una impresión completa con `fin_con_apagado.gcode`.
-  Ya está probado sin impresora que ESP3D ejecuta `[ESP201]` desde un archivo de la SD.
+  Ya está probado sin impresora que ESP3D ejecuta `[ESP201]` desde un archivo de la SD, y que lo ignora o lo ejecuta
+  según el interruptor (que vuelve a desactivado después).
 - Confirmar que el Marlin de la S8 manda mensajes mientras espera (`M109`, `G4`), que es lo que mantiene viva la
   impresión con el arreglo de `gcode_host.cpp`.
 - No se puede subir a la SD de la impresora desde la WEBUI: sólo lo permite el protocolo MKS.

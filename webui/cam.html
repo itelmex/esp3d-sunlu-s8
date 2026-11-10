@@ -96,6 +96,7 @@
   .sw input:checked + span::after { transform: translateX(22px); }
   .sw input:disabled + span { opacity: .45; cursor: wait; }
   .on-luz .ico { background: color-mix(in srgb, var(--warn) 22%, var(--panel2)); border-color: var(--warn); }
+  .on-fin .ico { background: color-mix(in srgb, var(--acc) 20%, var(--panel2)); border-color: var(--acc); }
   .on-imp .ico { background: color-mix(in srgb, var(--ok) 18%, var(--panel2)); border-color: var(--ok); }
   .nota { margin-top: 8px; font-size: 12px; color: var(--mute); min-height: 16px; }
   .nota.warn { color: var(--warn); }
@@ -173,6 +174,11 @@
           <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg></div>
           <div class="t"><b>Luz</b><small id="tLuz">—</small></div>
           <label class="sw"><input type="checkbox" id="swLuz"><span></span></label>
+        </div>
+        <div class="ctl" id="cFin">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg></div>
+          <div class="t"><b>Apagar al terminar</b><small id="tFin">—</small></div>
+          <label class="sw"><input type="checkbox" id="swFin"><span></span></label>
         </div>
         <div class="nota" id="nota"></div>
       </div>
@@ -301,6 +307,7 @@
 
 
   // ---------- relés (GPIO de esta placa, ver configuration.h del firmware)
+  const PIN_FIN = 100;   // pin virtual del firmware: 1 = el G-code final apaga la impresora (arranca en 0, se usa una vez)
   const RELE = { impresora: 21, luz: 14 }, ACTIVO = 0;   // ACTIVO: nivel que energiza la bobina (módulo con optoacoplador: 0)
   // Impresora en el contacto NC: bobina energizada = impresora APAGADA. Luz en el NA: energizada = luz encendida.
   const TEMP_SEGURA = 50;
@@ -325,6 +332,7 @@
     try {
       const imp = await leePin(RELE.impresora), luz = await leePin(RELE.luz);
       pinta(imp !== ACTIVO, luz === ACTIVO);
+      pintaFin(await leePin(PIN_FIN) === 1);
     } catch (e) {}
   }
 
@@ -398,6 +406,18 @@
       if (quiere) await ponPin(RELE.impresora, ACTIVO ? 0 : 1);
       else await apagaImpresora();
     } catch (err) { nota("No se pudo cambiar el relé.", true); }
+    e.target.disabled = false;
+    leeReles();
+  };
+  function pintaFin(on) {
+    $("swFin").checked = on;
+    $("tFin").textContent = on ? "Se apagará al enfriarse" : "Queda encendida al terminar";
+    $("cFin").classList.toggle("on-fin", on);
+  }
+  $("swFin").onchange = async e => {
+    const quiere = e.target.checked;
+    e.target.disabled = true;
+    try { await ponPin(PIN_FIN, quiere ? 1 : 0); } catch (err) { nota("No se pudo cambiar.", true); }
     e.target.disabled = false;
     leeReles();
   };

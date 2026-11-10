@@ -15,8 +15,9 @@ Sirve para cualquier impresora con Marlin por USB; la Sunlu S8 es la que está p
 - Enciende y apaga la impresora y la luz con un módulo de 2 relés.
 - Apaga la impresora sola al terminar, cuando el hotend ya se enfrió.
 
-Estado al 10/11/2026: **funcionando** en http://192.168.1.15 (IP reservada en el router por MAC). Pendiente de probar
-con la impresora: los relés conectados y el apagado al final de una impresión (ver [Pendiente](#pendiente)).
+Estado al 10/11/2026: **funcionando** en http://192.168.1.15 (IP reservada en el router por MAC). Probado con la impresora
+el 10/11/2026: lectura de temperatura, relés y apagado por temperatura desde `cam.html`. Falta una impresión completa
+con el apagado al final (ver [Pendiente](#pendiente)).
 
 ## Contenido
 
@@ -64,9 +65,12 @@ Del lado de 127 V:
 | Relé 1 | Común y **NC**, en la fase de la impresora | En reposo la impresora está **encendida**: si la placa se reinicia, se cuelga o se queda sin corriente, la impresión sigue. **Energizado = impresora apagada.** |
 | Relé 2 | Común y **NA**, en la fase de la fuente de la luz | Energizado = luz encendida |
 
-- El módulo se configuró **activo con LOW** (lo normal con optoacoplador). Si resulta activo con HIGH, cambiar
-  `LUIS_RELE_ACTIVO` en `configuration.h` y `ACTIVO` en `cam.html`.
-- Si el relé no suelta del todo con 3.3 V: quitar el puente JD-VCC, VCC a 3.3 V y JD-VCC a 5 V.
+- El módulo es **activo con LOW** y conmuta bien con la señal de 3.3 V de la ESP32-S3 (probado el 10/11/2026). Con
+  otro módulo activo con HIGH, cambiar `LUIS_RELE_ACTIVO` en `configuration.h` y `ACTIVO` en `cam.html`.
+- Si otro módulo no suelta del todo con 3.3 V: quitar el puente JD-VCC, VCC a 3.3 V y JD-VCC a 5 V.
+- **Con la impresora apagada por el relé, su pantalla sigue encendida:** la tarjeta Marlin se alimenta con los 5 V del
+  cable USB de la ESP32 y sigue contestando `M105`. Los 24 V (calentadores, motores y ventiladores) sí se cortan, así que
+  no puede calentar. Es normal.
 - **Todo va a una barra con interruptor:** apagarla corta todo. Al encenderla, la impresora arranca de inmediato porque
   el relé 1 está en reposo.
 
@@ -248,10 +252,11 @@ otra pestaña: recargarla.
 
 ## Pendiente
 
-- Conectar el módulo de relés y confirmar la polaridad (LOW = activo) y que suelte con 3.3 V.
-- Probar con la impresora la lectura de la temperatura en `cam.html` y una impresión completa con `fin_con_apagado.gcode`.
+- Una impresión completa desde la SD de la placa con `fin_con_apagado.gcode`.
   Ya está probado sin impresora que ESP3D ejecuta `[ESP201]` desde un archivo de la SD, y que lo ignora o lo ejecuta
   según el interruptor (que vuelve a desactivado después).
+- Ya probado con la impresora: `M105` contesta `ok T:27.95 /0.00 B:27.93 /0.00 @:0 B@:0` y `cam.html` lo lee; con el
+  hotend a 60 °C ofreció esperar, y al bajar de 50 °C activó el relé y la impresora se apagó.
 - Confirmar que el Marlin de la S8 manda mensajes mientras espera (`M109`, `G4`), que es lo que mantiene viva la
   impresión con el arreglo de `gcode_host.cpp`.
 - No se puede subir a la SD de la impresora desde la WEBUI: sólo lo permite el protocolo MKS.

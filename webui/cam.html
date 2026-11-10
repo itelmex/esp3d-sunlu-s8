@@ -10,11 +10,11 @@
 <style>
   :root {
     --bg: #0f1216; --panel: #181c22; --panel2: #1f242c; --line: #2a313b;
-    --txt: #e8ecf1; --mute: #8b95a3; --acc: #ff7a1a; --ok: #2ecc71; --bad: #e74c3c; --warn: #f1c40f;
+    --txt: #e8ecf1; --mute: #8b95a3; --acc: #ff7a1a; --ok: #2ecc71; --bad: #e74c3c; --warn: #f1c40f; --warn-txt: #f1c40f;
     --r: 14px;
   }
   @media (prefers-color-scheme: light) {
-    :root { --bg: #eef1f5; --panel: #ffffff; --panel2: #f5f7fa; --line: #dde2e8; --txt: #1b2129; --mute: #677284; }
+    :root { --bg: #eef1f5; --panel: #ffffff; --panel2: #f5f7fa; --line: #dde2e8; --txt: #1b2129; --mute: #677284; --warn-txt: #8a5a00; }
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; background: var(--bg); color: var(--txt);
@@ -100,7 +100,7 @@
   .on-fin .ico { background: color-mix(in srgb, var(--acc) 20%, var(--panel2)); border-color: var(--acc); }
   .on-imp .ico { background: color-mix(in srgb, var(--ok) 18%, var(--panel2)); border-color: var(--ok); }
   .nota { margin-top: 8px; font-size: 12px; color: var(--mute); min-height: 16px; }
-  .nota.warn { color: var(--warn); }
+  .nota.warn { color: var(--warn-txt); font-weight: 600; }
 
   :fullscreen .view, .view:fullscreen { aspect-ratio: auto; height: 100vh; max-height: none; }
 </style>
